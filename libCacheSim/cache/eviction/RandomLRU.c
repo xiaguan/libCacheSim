@@ -181,9 +181,20 @@ static int compare_access_time(const void *p1, const void *p2) {
   const cache_obj_t *obj1 = *(const cache_obj_t **)p1;
   const cache_obj_t *obj2 = *(const cache_obj_t **)p2;
 
-  if (obj1->Random.last_access_vtime < obj2->Random.last_access_vtime) {
+  int64_t vtime1 = obj1->Random.last_access_vtime;
+  int64_t vtime2 = obj2->Random.last_access_vtime;
+
+  // Ensure non-zero vtime values to avoid log2(0)
+  if (vtime1 == 0) vtime1 = 1;
+  if (vtime2 == 0) vtime2 = 1;
+
+  // Compare log2 values of vtime for sorting
+  int64_t log_vtime1 = (int64_t)log2(vtime1);
+  int64_t log_vtime2 = (int64_t)log2(vtime2);
+
+  if (log_vtime1 < log_vtime2) {
     return -1;
-  } else if (obj1->Random.last_access_vtime > obj2->Random.last_access_vtime) {
+  } else if (log_vtime1 > log_vtime2) {
     return 1;
   } else {
     return 0;
